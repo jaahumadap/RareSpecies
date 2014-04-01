@@ -1,8 +1,8 @@
 
 # I generate some data here, but the process starts with any
-# species trynary matrix
+# species trinary matrix
 require(binom)
-data<-f.data.generator(sites=60,days=15,psi=.05,p=.05,phi=0.05,gamma=0.05,nyears=5)
+data<-f.data.generator(sites=60,days=15,psi=.01,p=.01,phi=0.05,gamma=0.05,nyears=5)
 #simulating some holes in the data
 data[31:60,1:7,]<-NA
 data[1:30,8:15,]<-NA
@@ -26,6 +26,7 @@ mean.dets <- mean(n.dets)
 
 # naive occupancy
 occ <- n.dets/n
+#new.occ will contain 1000 realizations of each 
 new.occ <- matrix(NA,nr=1000,nc=nyears)
 
 for(i in 1:nyears){
@@ -34,4 +35,13 @@ for(i in 1:nyears){
   new.occ[,i] <- sample(x=mod.bin$data$xx,size=1000,replace=T,prob=mod.bin$data$yy)
 }
 
-ggplot(data=new.occ,aes())
+# Check everything makes sense and graph it
+conf.lims <- apply(new.occ,2,quantile,c(0.025,0.975))
+occ.mode <- apply(new.occ,2,f.mode)
+
+#plot mode of the distribution plus confidence limits
+plot(1:nyears,occ.mode,t='l',ylim=c(0,1))
+lines(1:nyears,conf.lims[1,],lty=2)
+lines(1:nyears,conf.lims[2,],lty=2)
+#observed
+points(1:nyears,occ)
