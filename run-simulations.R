@@ -2,6 +2,83 @@
 require(R2jags)
 require(ggplot2)
 require(reshape2)
+
+
+
+
+
+res.01.01<-f.fit.JAGS(psi=.01,p=.01,nsims=50)
+res.01.05<-f.fit.JAGS(psi=.01,p=.05,nsims=50)
+res.01.1<-f.fit.JAGS(psi=.01,p=.1,nsims=50)
+res.01.5<-f.fit.JAGS(psi=.01,p=.5,nsims=50)
+
+res.05.01<-f.fit.JAGS(psi=.05,p=.01,nsims=50)
+res.05.05<-f.fit.JAGS(psi=.05,p=.05,nsims=50)
+res.05.1<-f.fit.JAGS(psi=.05,p=.1,nsims=50)
+res.05.5<-f.fit.JAGS(psi=.05,p=.5,nsims=50)
+
+res.1.01<-f.fit.JAGS(psi=.1,p=.01,nsims=50)
+res.1.05<-f.fit.JAGS(psi=.1,p=.05,nsims=50)
+res.1.1<-f.fit.JAGS(psi=.1,p=.1,nsims=50)
+res.1.5<-f.fit.JAGS(psi=.1,p=.5,nsims=50)
+
+res.3.01<-f.fit.JAGS(psi=.3,p=.01,nsims=50)
+res.3.05<-f.fit.JAGS(psi=.3,p=.05,nsims=50)
+res.3.1<-f.fit.JAGS(psi=.3,p=.1,nsims=50)
+res.3.5<-f.fit.JAGS(psi=.3,p=.5,nsims=50)
+
+res.5.01<-f.fit.JAGS(psi=.5,p=.01,nsims=50)
+res.5.05<-f.fit.JAGS(psi=.5,p=.05,nsims=50)
+res.5.1<-f.fit.JAGS(psi=.5,p=.1,nsims=50)
+res.5.5<-f.fit.JAGS(psi=.5,p=.5,nsims=50)
+
+res.01.01$diags <- data.frame(res.01.01$diags,t.psi=0.01,t.p=0.01)
+res.01.05$diags <- data.frame(res.01.05$diags,t.psi=0.01,t.p=0.05)
+res.01.1$diags <- data.frame(res.01.1$diags,t.psi=0.01,t.p=0.1)
+res.01.5$diags <- data.frame(res.01.5$diags,t.psi=0.01,t.p=0.5)
+
+res.05.01$diags <- data.frame(res.05.01$diags,t.psi=0.05,t.p=0.01)
+res.05.05$diags <- data.frame(res.05.05$diags,t.psi=0.05,t.p=0.05)
+res.05.1$diags <- data.frame(res.05.1$diags,t.psi=0.05,t.p=0.1)
+res.05.5$diags <- data.frame(res.05.5$diags,t.psi=0.05,t.p=0.5)
+
+res.1.01$diags <- data.frame(res.1.01$diags,t.psi=0.1,t.p=0.01)
+res.1.05$diags <- data.frame(res.1.05$diags,t.psi=0.1,t.p=0.05)
+res.1.1$diags <- data.frame(res.1.1$diags,t.psi=0.1,t.p=0.1)
+res.1.5$diags <- data.frame(res.1.5$diags,t.psi=0.1,t.p=0.5)
+
+res.3.01$diags <- data.frame(res.3.01$diags,t.psi=0.3,t.p=0.01)
+res.3.05$diags <- data.frame(res.3.05$diags,t.psi=0.3,t.p=0.05)
+res.3.1$diags <- data.frame(res.3.1$diags,t.psi=0.3,t.p=0.1)
+res.3.5$diags <- data.frame(res.3.5$diags,t.psi=0.3,t.p=0.5)
+
+res.5.01$diags <- data.frame(res.5.01$diags,t.psi=0.5,t.p=0.01)
+res.5.05$diags <- data.frame(res.5.05$diags,t.psi=0.5,t.p=0.05)
+res.5.1$diags <- data.frame(res.5.1$diags,t.psi=0.5,t.p=0.1)
+res.5.5$diags <- data.frame(res.5.5$diags,t.psi=0.5,t.p=0.5)
+res.tot<-rbind(
+res.01.01$diags,
+res.01.05$diags,
+res.01.1$diags,
+res.01.5$diags,
+res.05.01$diags,
+res.05.05$diags,
+res.05.1$diags,
+res.05.5$diags,
+res.1.01$diags,
+res.1.05$diags,
+res.1.1$diags,
+res.1.5$diags)
+res.3.01$diags,
+res.3.05$diags,
+res.3.1$diags,
+res.3.5$diags,
+res.5.01$diags,
+res.5.05$diags,
+res.5.1$diags,
+res.5.5$diags
+)
+
 system.time(res<-f.fit.JAGS(psi=0.01,p=0.01,phi=0.01,gamma=0.01,nsites=60,ndays=15,nyears=5,ns=1))
 #run one with 500 sumulations
 system.time(res.01.01.500<-f.fit.JAGS(psi=0.01,p=0.01,phi=0.1,gamma=0.1,nsites=60,ndays=15,nyears=3,ns=500))
