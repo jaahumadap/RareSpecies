@@ -30,6 +30,14 @@ f.data.generator<-function(sites,days,psi,p,phi,gamma,nyears) {
   yk
 }
 
+#function to calculate the mode of a distribution
+f.mode<-function(data){
+  qwe<-density(data)
+  qwe$x[which(qwe$y==max(qwe$y))]
+  
+}
+
+# Create a new data set
 data<-f.data.generator(sites=60,days=15,psi=.01,p=.01,phi=0.05,gamma=0.05,nyears=5)
 #simulating some holes in the data
 data[31:60,1:7,]<-NA
@@ -73,3 +81,4 @@ lines(1:nyears,conf.lims[1,],lty=2)
 lines(1:nyears,conf.lims[2,],lty=2)
 #observed
 points(1:nyears,occ)
+
