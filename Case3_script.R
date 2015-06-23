@@ -38,7 +38,10 @@ f.mode<-function(data){
 }
 
 # Create a new data set
-data<-f.data.generator(sites=60,days=15,psi=.01,p=.01,phi=0.05,gamma=0.05,nyears=5)
+ 
+
+
+data<-f.data.generator(sites=60,days=15,psi=0.05,p=.05,phi=0.4,gamma=0.1,nyears=5)
 #simulating some holes in the data
 data[31:60,1:7,]<-NA
 data[1:30,8:15,]<-NA
@@ -61,7 +64,7 @@ n.dets <- apply(pa.year,2,sum,na.rm=T)
 mean.dets <- mean(n.dets)
 
 # naive occupancy
-occ <- n.dets/n
+occ <- n.dets/n.cams
 #new.occ will contain 1000 realizations of each 
 new.occ <- matrix(NA,nr=1000,nc=nyears)
 
