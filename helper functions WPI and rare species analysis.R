@@ -1,6 +1,11 @@
 #HELPER functions in WPI analysis and rare species analyses
 #create some fake data for a species
 #that is rare
+mean.det.prob <- function(spmat){
+  #calculate the observed mean det probability for a species
+  mean(apply(spMat,c(3),sum,na.rm=T)/apply(spMat,c(3),function(x){sum(!is.na(x))}))
+}
+
 f.data.generator<-function(sites,days,psi,p,phi,gamma,nyears) {
   #first year of data
   y1<-matrix(NA,nr=sites,nc=days)
