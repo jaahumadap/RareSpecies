@@ -8,22 +8,47 @@ p=0.1
 phi=0.2
 gamma=0.1
 nyears=3
+
+ #function to generate some data
+ f.data.generator<-function(sites,days,psi,p,phi,gamma,nyears) {
+   #first year of data
+   y1<-matrix(NA,nr=sites,nc=days)
+   #generate the expected occupancies
+   z<-rbinom(sites,1,psi)
+   #generate the observations
+   for(i in 1:sites)
+     y1[i,]<-rbinom(days,1,z[i]*p)
+   #subsequent years
+   #three dimensional matrix to store the results
+   yk<-array(NA,dim=c(sites,days,nyears))
+   yk[,,1]<-y1
+   for(k in 2:nyears){
+     #generate the deterministic part of the model
+     occ<-apply(yk[,,k-1],1,max,na.rm=T)
+     z<-rbinom(sites,1,occ*phi+(1-occ)*gamma)
+     #generate the observations
+     for(i in 1:sites)
+       yk[i,,k]<-rbinom(days,1,z[i]*p)
+     
+   }  
+   yk
+ } 
+ 
 notRare<-f.data.generator(sites,days,psi,p,phi,gamma,nyears)
 
 #estimate detection probability from the data
-ndetections<-apply(notRare,c(1,3),sum,na.rm=T)
-nsamples<-apply(!is.na(notRare),c(1,3),sum)
-detProb<-ndetections/nsamples
-indx<-which(detProb>0)
-muPrior<-mean(detProb[indx])
-thauPrior<-1/(sd(detProb[indx]))^2
+#ndetections<-apply(notRare,c(1,3),sum,na.rm=T)
+#nsamples<-apply(!is.na(notRare),c(1,3),sum)
+#detProb<-ndetections/nsamples
+#indx<-which(detProb>0)
+#muPrior<-mean(detProb[indx])
+#thauPrior<-1/(sd(detProb[indx]))^2
 
 #use these estimates as priors in the JAGS model
-jags.data <- list(y = notRare, nsite = sites, nrep = days, nyear = nyears,mu=muPrior,thau=thauPrior)
+jags.data <- list(y = notRare, nsite = sites, nrep = days, nyear = nyears)
 
 # Initial values
 initial <- apply(notRare, c(1,3), max, na.rm = TRUE)
-#tmp[tmp=="-Inf"]<-NA # remove the -Inf's that result when the camera trap was stolen
 inits <- function(){ list(z = initial)}
 
 # Parameters monitored
@@ -115,13 +140,16 @@ indx<-which(detProb>0)
 (thauPrior<-1/(sd(detProb[indx]))^2)
 
 #use these estimates as priors in the JAGS model
-jags.data <- list(y = notRare, nsite = sites, nrep = days, nyear = nyears,mu=muPrior,thau=1000)
+jags.data <- list(y = notRare, nsite = sites, nrep = days, nyear = nyears)
 
 # Initial values
 initial <- apply(notRare, c(1,3), max, na.rm = TRUE)
 #tmp[tmp=="-Inf"]<-NA # remove the -Inf's that result when the camera trap was stolen
 inits <- function(){ list(z = initial)}
-
+inits1 <- list(z = initial,p=0.5,phi=0.1)
+ inits2 <- list(z = initial,p=.2,phi=.5)
+ inits3 <- list(z = initial, .RNG.seed=8)
+ 
 # Parameters monitored
 params <- c("psi", "phi", "gamma", "p", "lambda") 
 

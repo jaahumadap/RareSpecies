@@ -2,6 +2,34 @@
 # I generate some data here, but the process starts with any
 # species trinary matrix
 require(binom)
+
+
+#Function that creates some fake data for a species
+#that is rare
+f.data.generator<-function(sites,days,psi,p,phi,gamma,nyears) {
+  #first year of data
+  y1<-matrix(NA,nr=sites,nc=days)
+  #generate the expected occupancies
+  z<-rbinom(sites,1,psi)
+  #generate the observations
+  for(i in 1:sites)
+    y1[i,]<-rbinom(days,1,z[i]*p)
+  #subsequent years
+  #three dimensional matrix to store the results
+  yk<-array(NA,dim=c(sites,days,nyears))
+  yk[,,1]<-y1
+  for(k in 2:nyears){
+    #generate the deterministic part of the model
+    occ<-apply(yk[,,k-1],1,max,na.rm=T)
+    z<-rbinom(sites,1,occ*phi+(1-occ)*gamma)
+    #generate the observations
+    for(i in 1:sites)
+      yk[i,,k]<-rbinom(days,1,z[i]*p)
+    
+  }  
+  yk
+}
+
 data<-f.data.generator(sites=60,days=15,psi=.01,p=.01,phi=0.05,gamma=0.05,nyears=5)
 #simulating some holes in the data
 data[31:60,1:7,]<-NA

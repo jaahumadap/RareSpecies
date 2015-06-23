@@ -43,50 +43,37 @@ f.mode<-function(data){
 
 #Main function to execute an iteration of the fitting process with JAGS
 
-f.fit.JAGS<-function(psi=0.05,p=0.05,phi=0.2,gamma=0.2,nsites=30,ndays=10,nyears=1,nsims=1){
+f.fit.JAGS<-function(psi=0.1,p=0.1,phi=0.1,gamma=0.1,nsites=60,ndays=15,nyears=5,nsims=1){
   #set up data frames to store results
   res.mean<-data.frame(psi=rep(NA,nsims),p=NA,phi=NA,gamma=NA)
   res.median<-data.frame(psi=rep(NA,nsims),p=NA,phi=NA,gamma=NA)
   res.mode<-data.frame(psi=rep(NA,nsims),p=NA,phi=NA,gamma=NA)
+  res.diags <- data.frame(ndets=rep(NA,nsims),ndetsy=rep(NA,nsims),diff=rep(NA,nsims),fit.score=rep(NA,nsims))
   for(i in 1:nsims){
     print(paste("Simulation ",i," of ",nsims,sep=""))
     #generate some data first
     data<-f.data.generator(nsites,ndays,psi,p,phi,gamma,nyears)
-    obs<-apply(apply(data,c(1,3),max,na.rm=T),2,sum)/nsites
-    #estimate detection probability from the data
-    ndetections<-apply(data,c(1,3),sum,na.rm=T)
-    nsamples<-apply(!is.na(data),c(1,3),sum)
-    detProb<-ndetections/nsamples
-    indx<-which(detProb>0)
-    #if there are no 1's in the data
-    if(!length(indx)){
-      muDetPrior<-0.01
-    } else
-      muDetPrior<-mean(detProb[indx])
-    
-    #estimate occupancy in year1 from the data
-    muPsi1Prior<-sum(apply(data[,,1],1,max,na.rm=T))/nsites
-    #if there are no 1's in the data
-    if(!muPsi1Prior){
-      muPsi1Prior<-0.01
-    }
+    # n of pres/abs per year
+    n.dets <- apply(apply(data,c(1,3),max,na.rm=T),2,sum)
+    #n detections per site per year
+    n.dets.sy <- mean(apply(apply(data,c(1,3),sum),2,sum)/nsites)
+    naive.occ <-n.dets/nsites
     
     #setup data for JAGS
-    jags.data <- list(y = data, nsite = nsites, nrep = ndays, nyear = nyears,muDet=muDetPrior,thauDet=100,muPsi1=muPsi1Prior,thauPsi1=100)
+    jags.data <- list(y = data, nsite = nsites, nrep = ndays, nyear = nyears)
     
     # Initial values
     initial <- apply(data, c(1,3), max, na.rm = TRUE)
-    #tmp[tmp=="-Inf"]<-NA # remove the -Inf's that result when the camera trap was stolen
     inits <- function(){ list(z = initial)}
     #params to monitor
     params <- c("psi", "phi", "gamma", "p", "lambda") 
     # MCMC settings
-    ni <- 1000
+    ni <- 2000
     nt <- 2
-    nb <- 500
-    nc <- 4
+    nb <- 1000
+    nc <- 3
     
-    out <- jags(jags.data, inits, params, "Dynocc-jags-priorOnDetProb-psiYear1.txt", n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb, working.directory = getwd())
+    out <- jags(jags.data, inits, params, "model.txt", n.chains = nc, n.thin = nt, n.iter = ni, n.burnin = nb, working.directory = getwd())
   
     rawSims<-out$BUGSoutput$sims.array
     pnames<-dimnames(rawSims)[[3]]
@@ -108,8 +95,21 @@ f.fit.JAGS<-function(psi=0.05,p=0.05,phi=0.2,gamma=0.2,nsites=30,ndays=10,nyears
     res.mode$p[i]<-f.mode(rawSims[,,"p"])
     res.mode$phi[i]<-f.mode(rawSims[,,"phi"])
     res.mode$gamma[i]<-f.mode(rawSims[,,"gamma"])
+    
+    #where are the psi's in the JAGS object
+    indx <- grep(pattern="psi",rownames(out$BUGSoutput$summary))
+    #model fits
+    fitted.psi <- out$BUGSoutput$summary[indx,2]
+    low.psi <- out$BUGSoutput$summary[indx,3]
+    hi.psi <- out$BUGSoutput$summary[indx,7]
+    #mean difference between observed and expected
+    res.diags$diff[i] <- sum(abs(fitted.psi-naive.occ))/nyears
+    #the fit score has a max value of nyears if observed occupancy is within the boundaries of the model
+    res.diags$fit.score[i] <- sum(naive.occ < hi.psi & naive.occ > low.psi)
+    res.diags$ndets[i] <-mean(n.dets)
+    res.diags$ndetsy[i] <- n.dets.sy
   }
-  list(mean=res.mean,median=res.median,mode=res.mode,obs=obs)
+  list(mean=res.mean,median=res.median,mode=res.mode,diags=res.diags)
 }
 
 f.ConvertListToDataframe<-function(list,psi,p){
